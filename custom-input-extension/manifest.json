@@ -1,5 +1,5 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Custom Input Everywhere",
   "version": "1.0",
   "description": "A floating input box extension with smart typing and AI-powered modes.",
@@ -22,7 +22,7 @@
       "css": ["styles/floatbox.css"]
     }
   ],
-  "action": {
+  "browser_action": {
     "default_popup": "popup.html",
     "default_icon": {
       "48": "icons/icon-48.png"
