@@ -1,0 +1,18 @@
+#custom-floating-box {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 600px;
+  height: 200px;
+  font-size: 16px;
+  padding: 12px;
+  border: 2px solid #888;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  z-index: 99999;
+  background: white;
+  color: black;
+  resize: vertical;
+}
