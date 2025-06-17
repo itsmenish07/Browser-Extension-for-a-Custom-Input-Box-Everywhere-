@@ -1,37 +1,52 @@
-let activeInput = null;
-let floatBox = null;
+let currentTarget = null;
+let floatingBox = null;
 
-document.addEventListener("focusin", (e) => {
-  if (e.target.tagName === "TEXTAREA" || (e.target.tagName === "INPUT" && e.target.type === "text")) {
-    activeInput = e.target;
-    showFloatingBox(activeInput.value);
+document.addEventListener("focusin", (event) => {
+  const target = event.target;
+  if (target.tagName === "TEXTAREA" || (target.tagName === "INPUT" && target.type === "text")) {
+    currentTarget = target;
+    showFloatingBox(target);
   }
 });
 
-document.addEventListener("focusout", (e) => {
-  if (floatBox && !floatBox.contains(e.relatedTarget)) {
-    hideFloatingBox();
-  }
-});
-function showFloatingBox(initialValue) {
-  if (floatBox) return;
+function showFloatingBox(originalInput) {
+  if (floatingBox) floatingBox.remove();
 
-  floatBox = document.createElement("textarea");
-  floatBox.id = "custom-floating-box";
-  floatBox.value = initialValue;
-  document.body.appendChild(floatBox);
+  floatingBox = document.createElement("textarea");
+  floatingBox.value = originalInput.value;
 
-  floatBox.focus();
+  floatingBox.style.position = "fixed";
+  floatingBox.style.top = "30%";
+  floatingBox.style.left = "50%";
+  floatingBox.style.transform = "translateX(-50%)";
+  floatingBox.style.zIndex = "9999";
+  floatingBox.style.width = "400px";
+  floatingBox.style.height = "100px";
+  floatingBox.style.padding = "10px";
+  floatingBox.style.boxShadow = "0 0 15px rgba(0,0,0,0.2)";
+  floatingBox.style.fontSize = "16px";
+  floatingBox.style.background = "#f9f9f9";
+  floatingBox.style.border = "1px solid #aaa";
+  floatingBox.style.borderRadius = "8px";
+  floatingBox.style.outline = "none";
 
-  // Sync typed text to actual input
-  floatBox.addEventListener("input", () => {
-    if (activeInput) activeInput.value = floatBox.value;
+  document.body.appendChild(floatingBox);
+  floatingBox.focus();
+
+  // ✅ Sync floating → original
+  floatingBox.addEventListener("input", () => {
+    originalInput.value = floatingBox.value;
+
+    // 🔄 Trigger input event (very important for compatibility)
+    const inputEvent = new Event('input', { bubbles: true });
+    originalInput.dispatchEvent(inputEvent);
   });
-}
-function hideFloatingBox() {
-  if (floatBox) {
-    floatBox.remove();
-    floatBox = null;
-    activeInput = null;
-  }
+
+  // Hide when pressing Esc
+  floatingBox.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      floatingBox.remove();
+      floatingBox = null;
+    }
+  });
 }
