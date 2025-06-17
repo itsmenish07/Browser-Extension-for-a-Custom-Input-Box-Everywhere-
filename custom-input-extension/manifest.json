@@ -2,18 +2,14 @@
   "manifest_version": 2,
   "name": "Custom Input Everywhere",
   "version": "1.0",
-  "description": "A floating input box extension with smart typing and AI-powered modes.",
+  "description": "A floating input box extension that syncs user input and allows AI enhancements.",
   "permissions": [
     "activeTab",
-    "scripting",
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "<all_urls>"
+    "tabs",
+    "storage"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
   "content_scripts": [
     {
@@ -24,16 +20,9 @@
   ],
   "browser_action": {
     "default_popup": "popup.html",
-    "default_icon": {
-      "48": "icons/icon-48.png"
-    }
+    "default_icon": "icons/icon-48.png"
   },
   "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+X"
-      }
-    },
     "toggle_habit_mode": {
       "suggested_key": {
         "default": "Ctrl+Shift+H"
