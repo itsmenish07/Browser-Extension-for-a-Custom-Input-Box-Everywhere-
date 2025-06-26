@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Custom Input Extension</title>
-  <link rel="stylesheet" href="popup.css" />
+  <title>Mode Toggle</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    label { display: block; margin: 0.5rem 0; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <h2>🧠 Input Extension</h2>
-  <p>Status: <span id="status">Loaded</span></p>
-  <button id="toggleMode">Toggle Mode</button>
+  <h2>Mode Selection</h2>
+  <label><input type="radio" name="mode" value="habit" checked> Habit Mode</label>
+  <label><input type="radio" name="mode" value="advanced"> Advanced Mode</label>
 
   <script src="popup.js"></script>
 </body>
