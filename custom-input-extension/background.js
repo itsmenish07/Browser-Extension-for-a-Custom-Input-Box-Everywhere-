@@ -1,4 +1,3 @@
-// background.js
 chrome.commands.onCommand.addListener((command) => {
   if (command === "toggle-habit-mode") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

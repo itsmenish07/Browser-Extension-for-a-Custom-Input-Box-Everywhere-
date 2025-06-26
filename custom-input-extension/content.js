@@ -1,41 +1,17 @@
-let currentMode = "habit"; // Default mode
-
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.action === "setMode") {
-    currentMode = msg.mode;
-    if (currentMode === "habit") {
-      enableHabitMode();
-    } else {
-      enableAdvancedMode();
-    }
-  }
-});
-
-function enableHabitMode() {
-  console.log('Habit Mode enabled');
-  // You can put logic to activate floating box features
-}
-function enableAdvancedMode() {
-  console.log('Advanced Mode enabled');
-  // You can put logic to disable floating box & enable advanced stuff
-}
-
 // ====================
 // GLOBAL VARIABLES
 // ====================
-
 let activeInput = null;
 let floatingBox = null;
-
+let currentMode = "habit";
+let settings = { defaultMode: 'habit', boxPosition: 'top', theme: 'light', apiKey: '' };
 
 // ====================
-// CREATE & STYLE THE FLOATING BOX
+// CREATE FLOATING BOX
 // ====================
-
 function createFloatingBox() {
   floatingBox = document.createElement('textarea');
   floatingBox.id = 'habit-mode-input';
-
   floatingBox.style.cssText = `
     position: fixed;
     top: 10%;
@@ -55,50 +31,84 @@ function createFloatingBox() {
     transition: opacity 0.2s ease;
     display: none;
   `;
-
-  // Dark mode support
-  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    floatingBox.style.background = "#222";
-    floatingBox.style.color = "#eee";
-  }
-
   document.body.appendChild(floatingBox);
 }
 createFloatingBox();
 
+// ====================
+// LOAD SETTINGS
+// ====================
+chrome.storage.local.get(
+  ['defaultMode', 'boxPosition', 'theme', 'apiKey'],
+  (prefs) => {
+    settings = { ...settings, ...prefs };
+    applySettings();
+  }
+);
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === "updateSettings") {
+    chrome.storage.local.get(
+      ['defaultMode', 'boxPosition', 'theme', 'apiKey'],
+      (prefs) => { settings = { ...settings, ...prefs }; applySettings(); }
+    );
+  } else if (msg.action === "setMode") {
+    currentMode = msg.mode;
+    if (currentMode === "habit") enableHabitMode();
+    else enableAdvancedMode();
+  }
+});
+
+function applySettings() {
+  // Box position
+  if (settings.boxPosition === 'top') {
+    floatingBox.style.top = '10%';
+    floatingBox.style.bottom = '';
+    floatingBox.style.transform = 'translateX(-50%)';
+  } else if (settings.boxPosition === 'center') {
+    floatingBox.style.top = '50%';
+    floatingBox.style.bottom = '';
+    floatingBox.style.transform = 'translate(-50%, -50%)';
+  } else if (settings.boxPosition === 'bottom') {
+    floatingBox.style.bottom = '10%';
+    floatingBox.style.top = '';
+    floatingBox.style.transform = 'translateX(-50%)';
+  }
+
+  // Theme
+  if (settings.theme === 'dark') {
+    floatingBox.style.background = "#222";
+    floatingBox.style.color = "#eee";
+  } else {
+    floatingBox.style.background = "#fdfdfd";
+    floatingBox.style.color = "#222";
+  }
+
+  // Default mode
+  currentMode = settings.defaultMode;
+  if (currentMode === "habit") enableHabitMode();
+  else enableAdvancedMode();
+}
 
 // ====================
-// SHOW FLOATING BOX WHEN INPUT FOCUSES
+// MODES
 // ====================
+function enableHabitMode() {
+  console.log('Habit Mode enabled.');
+}
+function enableAdvancedMode() {
+  console.log('Advanced Mode enabled.');
+}
 
+// ====================
+// SHOW/HIDE FLOATING BOX
+// ====================
 document.addEventListener('focusin', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+  if ((e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') && currentMode === "habit") {
     activeInput = e.target;
     showFloatingInput(activeInput);
   }
 });
-
-function showFloatingInput(target) {
-  floatingBox.value = target.value;
-  floatingBox.style.display = 'block';
-  setTimeout(() => (floatingBox.style.opacity = "1"), 10); // fade-in
-  floatingBox.focus();
-
-  // Sync floating → original
-  floatingBox.oninput = () => {
-    target.value = floatingBox.value;
-  };
-
-  // Sync original → floating
-  target.addEventListener('input', () => {
-    floatingBox.value = target.value;
-  });
-}
-
-
-// ====================
-// HIDE FLOATING BOX WHEN FOCUS MOVES AWAY
-// ====================
 
 document.addEventListener('focusout', (e) => {
   const newFocus = e.relatedTarget;
@@ -107,11 +117,21 @@ document.addEventListener('focusout', (e) => {
   }
 });
 
+function showFloatingInput(target) {
+  floatingBox.value = target.value;
+  floatingBox.style.display = 'block';
+  setTimeout(() => floatingBox.style.opacity = "1", 10);
+  floatingBox.focus();
+
+  floatingBox.oninput = () => { target.value = floatingBox.value; };
+  target.addEventListener('input', () => { floatingBox.value = target.value; });
+}
+
 floatingBox.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') hideFloatingInput();
 });
 
 function hideFloatingInput() {
   floatingBox.style.opacity = "0";
-  setTimeout(() => floatingBox.style.display = 'none', 200); // hide after fade
+  setTimeout(() => floatingBox.style.display = 'none', 200);
 }

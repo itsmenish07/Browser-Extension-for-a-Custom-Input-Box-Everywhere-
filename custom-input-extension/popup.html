@@ -1,16 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mode Toggle</title>
+  <title>Settings</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    label { display: block; margin: 0.5rem 0; cursor: pointer; }
+    body { font-family: sans-serif; padding: 1rem; width: 200px; }
+    label { display: block; margin: 0.5rem 0 0.2rem; }
+    select, input { width: 100%; padding: 0.2rem; }
+    button { width: 100%; padding: 0.4rem; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
-  <h2>Mode Selection</h2>
-  <label><input type="radio" name="mode" value="habit" checked> Habit Mode</label>
-  <label><input type="radio" name="mode" value="advanced"> Advanced Mode</label>
+  <h2>Settings</h2>
+
+  <label>Default Mode:</label>
+  <select id="defaultMode">
+    <option value="habit">Habit Mode</option>
+    <option value="advanced">Advanced Mode</option>
+  </select>
+
+  <label>Floating Box Position:</label>
+  <select id="boxPosition">
+    <option value="top">Top</option>
+    <option value="center">Center</option>
+    <option value="bottom">Bottom</option>
+  </select>
+
+  <label>Theme:</label>
+  <select id="theme">
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+  </select>
+
+  <label>API Key:</label>
+  <input id="apiKey" type="password" placeholder="Your API key" />
+
+  <button id="saveSettings">Save Settings</button>
 
   <script src="popup.js"></script>
 </body>

@@ -1,39 +1,36 @@
 {
   "manifest_version": 2,
-  "name": "Custom Input Everywhere",
+  "name": "Habit/Advanced Input Box",
   "version": "1.0",
-  "description": "A floating input box extension that syncs user input and allows AI enhancements.",
-  "permissions": [
-    "activeTab",
-    "tabs",
-    "storage"
-  ],
+  "description": "Floating Input box with Habit and Advanced Modes.",
+  "permissions": ["storage", "activeTab"],
+  
   "background": {
     "scripts": ["background.js"]
   },
+
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Habit/Advanced Input Box"
+  },
+
+  "commands": {
+    "toggle-habit-mode": {
+      "suggested_key": { "default": "Ctrl+Shift+H" }
+    },
+    "toggle-advanced-mode": {
+      "suggested_key": { "default": "Ctrl+Shift+A" }
+    }
+  },
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["styles/floatbox.css"]
+      "js": ["content.js"]
     }
   ],
-  "browser_action": {
-    "default_popup": "popup.html",
-    "default_icon": "icons/icon-48.png"
-  },
-  "commands": {
-    "toggle_habit_mode": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+H"
-      },
-      "description": "Toggle Habit Mode"
-    },
-    "toggle_advanced_mode": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+A"
-      },
-      "description": "Toggle Advanced Mode"
-    }
+
+  "icons": {
+    "48": "icons/icon-48.png"
   }
 }
