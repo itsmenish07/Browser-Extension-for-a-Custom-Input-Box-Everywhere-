@@ -1,14 +1,13 @@
-// ====================
-// GLOBAL VARIABLES
-// ====================
 let activeInput = null;
 let floatingBox = null;
 let currentMode = "habit";
-let settings = { defaultMode: 'habit', boxPosition: 'top', theme: 'light', apiKey: '' };
+let settings = {
+  defaultMode: 'habit',
+  boxPosition: 'top',
+  theme: 'light',
+  apiKey: ''
+};
 
-// ====================
-// CREATE FLOATING BOX
-// ====================
 function createFloatingBox() {
   floatingBox = document.createElement('textarea');
   floatingBox.id = 'habit-mode-input';
@@ -35,32 +34,12 @@ function createFloatingBox() {
 }
 createFloatingBox();
 
-// ====================
-// LOAD SETTINGS
-// ====================
-chrome.storage.local.get(
-  ['defaultMode', 'boxPosition', 'theme', 'apiKey'],
-  (prefs) => {
-    settings = { ...settings, ...prefs };
-    applySettings();
-  }
-);
-
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.action === "updateSettings") {
-    chrome.storage.local.get(
-      ['defaultMode', 'boxPosition', 'theme', 'apiKey'],
-      (prefs) => { settings = { ...settings, ...prefs }; applySettings(); }
-    );
-  } else if (msg.action === "setMode") {
-    currentMode = msg.mode;
-    if (currentMode === "habit") enableHabitMode();
-    else enableAdvancedMode();
-  }
+chrome.storage.local.get(['defaultMode', 'boxPosition', 'theme', 'apiKey'], (prefs) => {
+  settings = { ...settings, ...prefs };
+  applySettings();
 });
 
 function applySettings() {
-  // Box position
   if (settings.boxPosition === 'top') {
     floatingBox.style.top = '10%';
     floatingBox.style.bottom = '';
@@ -75,7 +54,6 @@ function applySettings() {
     floatingBox.style.transform = 'translateX(-50%)';
   }
 
-  // Theme
   if (settings.theme === 'dark') {
     floatingBox.style.background = "#222";
     floatingBox.style.color = "#eee";
@@ -84,27 +62,33 @@ function applySettings() {
     floatingBox.style.color = "#222";
   }
 
-  // Default mode
   currentMode = settings.defaultMode;
   if (currentMode === "habit") enableHabitMode();
   else enableAdvancedMode();
 }
 
-// ====================
-// MODES
-// ====================
 function enableHabitMode() {
-  console.log('Habit Mode enabled.');
+  console.log("✅ Habit Mode enabled");
 }
 function enableAdvancedMode() {
-  console.log('Advanced Mode enabled.');
+  console.log("✅ Advanced Mode enabled");
 }
 
-// ====================
-// SHOW/HIDE FLOATING BOX
-// ====================
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === "updateSettings") {
+    chrome.storage.local.get(['defaultMode', 'boxPosition', 'theme', 'apiKey'], (prefs) => {
+      settings = { ...settings, ...prefs };
+      applySettings();
+    });
+  } else if (msg.action === "setMode") {
+    currentMode = msg.mode;
+    if (currentMode === "habit") enableHabitMode();
+    else enableAdvancedMode();
+  }
+});
+
 document.addEventListener('focusin', (e) => {
-  if ((e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') && currentMode === "habit") {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
     activeInput = e.target;
     showFloatingInput(activeInput);
   }
@@ -118,20 +102,91 @@ document.addEventListener('focusout', (e) => {
 });
 
 function showFloatingInput(target) {
-  floatingBox.value = target.value;
   floatingBox.style.display = 'block';
   setTimeout(() => floatingBox.style.opacity = "1", 10);
   floatingBox.focus();
 
-  floatingBox.oninput = () => { target.value = floatingBox.value; };
-  target.addEventListener('input', () => { floatingBox.value = target.value; });
+  if (currentMode === "habit") {
+    floatingBox.value = target.value;
+    floatingBox.oninput = () => { target.value = floatingBox.value; };
+    target.addEventListener('input', () => { floatingBox.value = target.value; });
+  } else {
+    floatingBox.value = '';
+    floatingBox.oninput = null;
+  }
 }
-
-floatingBox.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') hideFloatingInput();
-});
 
 function hideFloatingInput() {
   floatingBox.style.opacity = "0";
   setTimeout(() => floatingBox.style.display = 'none', 200);
+}
+
+floatingBox.addEventListener('keydown', async (e) => {
+  if (e.key === 'Escape') {
+    hideFloatingInput();
+  }
+
+  if (e.key === 'Enter' && currentMode === "advanced") {
+    e.preventDefault();
+    const value = floatingBox.value.trim();
+    console.log("🎯 Advanced Mode: Enter pressed. Value:", value);
+
+    if (value.startsWith("/")) {
+      const command = value.slice(1);
+      console.log("🧠 Sending command to OpenRouter:", command);
+
+      const css = await getCSSFromCommand(command);
+      console.log("🎨 CSS received:", css);
+
+      if (css) {
+        injectCSS(css);
+      } else {
+        alert("⚠️ No CSS received from OpenRouter.");
+      }
+
+      floatingBox.value = '';
+      hideFloatingInput();
+    }
+  }
+});
+
+// ✅ OpenRouter Chat API for CSS Commands
+async function getCSSFromCommand(command) {
+  const payload = {
+    model: "phi-3", // use the name shown in LM Studio
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful CSS assistant. Only respond with valid CSS stylesheets, no explanations or markdown."
+      },
+      {
+        role: "user",
+        content: `Convert this instruction into CSS:\n"${command}"`
+      }
+    ],
+    temperature: 0.5,
+    max_tokens: 200
+  };
+
+  try {
+    const res = await fetch("http://localhost:1234/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    console.log("🧠 LM Studio Response:", data);
+
+    const css = data.choices?.[0]?.message?.content?.trim();
+    console.log("🎨 Extracted CSS:", css);
+
+    return css || null;
+  } catch (err) {
+    console.error("❌ LM Studio API error:", err);
+    alert("⚠️ Failed to connect to LM Studio. Make sure it's running and the server is ON.");
+    return null;
+  }
 }
