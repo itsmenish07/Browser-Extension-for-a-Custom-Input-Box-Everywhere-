@@ -110,4 +110,4 @@ These will be converted into CSS via Gemini and applied live.
 
 Ujjwal MISHRA (chemical engg.)
 Naisha Rajput(electrical engg.)
-![image](https://github.com/user-attachments/assets/284a8358-414f-4210-ab4e-4e69e9d1c9d7)
+
