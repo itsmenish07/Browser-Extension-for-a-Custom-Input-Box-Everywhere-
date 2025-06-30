@@ -152,41 +152,58 @@ floatingBox.addEventListener('keydown', async (e) => {
 
 // ✅ OpenRouter Chat API for CSS Commands
 async function getCSSFromCommand(command) {
-  const payload = {
-    model: "phi-3", // use the name shown in LM Studio
-    messages: [
-      {
-        role: "system",
-        content: "You are a helpful CSS assistant. Only respond with valid CSS stylesheets, no explanations or markdown."
-      },
-      {
-        role: "user",
-        content: `Convert this instruction into CSS:\n"${command}"`
-      }
-    ],
-    temperature: 0.5,
-    max_tokens: 200
-  };
+  if (!settings.apiKey) {
+    alert("❌ No API key set. Please paste your OpenRouter key in settings.");
+    return null;
+  }
+
+  const messages = [
+    {
+      role: "system",
+      content: "You are a helpful CSS assistant. Respond with only raw CSS code. No markdown, no explanation."
+    },
+    {
+      role: "user",
+      content: `Generate CSS for the following command:\n${command}`
+    }
+  ];
 
   try {
-    const res = await fetch("http://localhost:1234/v1/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${settings.apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        model: "mistralai/mixtral-8x7b-instruct",  // You can try others too
+        messages: messages,
+        max_tokens: 200,
+        temperature: 0.5
+      })
     });
 
     const data = await res.json();
-    console.log("🧠 LM Studio Response:", data);
+    console.log("📦 Full OpenRouter Chat Response:", data);
 
     const css = data.choices?.[0]?.message?.content?.trim();
-    console.log("🎨 Extracted CSS:", css);
+    console.log("📦 Extracted CSS:", css);
 
     return css || null;
   } catch (err) {
-    console.error("❌ LM Studio API error:", err);
-    alert("⚠️ Failed to connect to LM Studio. Make sure it's running and the server is ON.");
+    console.error("❌ OpenRouter API error:", err);
+    alert("⚠️ Failed to connect to OpenRouter.");
     return null;
   }
+}
+
+function injectCSS(css) {
+  let styleTag = document.getElementById('custom-css-injector');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'custom-css-injector';
+    document.head.appendChild(styleTag);
+  }
+  styleTag.textContent += `\n${css}`;
+  console.log("✅ Injected CSS:", css);
 }
